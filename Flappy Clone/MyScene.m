@@ -186,7 +186,7 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     [scoreTable setScale:2];
     
     SKLabelNode *dd = [SKLabelNode labelNodeWithFontNamed:@"04b_19"];
-    dd.text = [NSString stringWithFormat:@"%i", score];
+    dd.text = [NSString stringWithFormat:@"%li", (long)score];
     dd.position = CGPointMake(CGRectGetMidX(self.frame) -53, CGRectGetMidY(self.frame) -30);
     [self addChild:dd];
     
@@ -198,7 +198,7 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     if (score > [[[NSUserDefaults standardUserDefaults] objectForKey:@"best_score"] intValue])
     {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:[NSString stringWithFormat:@"%i", score] forKey:@"best_score"];
+        [defaults setObject:[NSString stringWithFormat:@"%li", (long)score] forKey:@"best_score"];
         [defaults synchronize];
     }
 }
