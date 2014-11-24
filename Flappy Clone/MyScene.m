@@ -12,43 +12,34 @@ static const float BG_FPS = 100;
 static const float PIPE_XPOS = 382;
 static const float FLOOR_DISTANCE = 72;
 
-static inline CGFloat ScalarRandomRange(CGFloat min, CGFloat max)
-{
+static inline CGFloat ScalarRandomRange(CGFloat min, CGFloat max) {
     return floorf(((double)arc4random() / 0x100000000) * (max - min) + min);
 }
 
-static inline CGFloat clamp(CGFloat min, CGFloat max, CGFloat value)
-{
-    if(value > max)
-    {
+static inline CGFloat clamp(CGFloat min, CGFloat max, CGFloat value) {
+    if(value > max) {
         return max;
-    }
-    
-    else if(value < min)
-    {
+    }else if(value < min) {
         return min;
     } else {
         return value;
     }
 }
 
-typedef NS_ENUM(int32_t, FCGameState)
-{
+typedef NS_ENUM(int32_t, FCGameState) {
     FCGameStateStarting,
     FCGameStatePlaying,
     FCGameStateEnded,
 };
 
-typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
-{
+typedef NS_OPTIONS(uint32_t, FCPhysicsCategory) {
     FCBoundaryCategory     = 1 << 0,
     FCPlayerCategory       = 1 << 1,
     FCPipeCategory         = 1 << 2,
     FCGapCategory          = 1 << 3,
 };
 
-@implementation MyScene
-{
+@implementation MyScene {
     int _score;
     
     SKNode *_bgLayer;
@@ -64,21 +55,17 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     FCGameState _gameState;
 }
 
-+ (void)initialize
-{
++ (void)initialize {
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     NSDictionary *defaults = [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"best_score", nil];
     [userDefaults registerDefaults:defaults];
 }
 
-- (id)initWithSize:(CGSize)size
-{
-    if (self = [super initWithSize:size])
-    {
+- (id)initWithSize:(CGSize)size {
+    if (self = [super initWithSize:size]) {
         [self initWorld];
         [self initBackground];
         [self initBird];
-        
     }
     
     return self;
@@ -86,22 +73,18 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
 
 #pragma mark - Initializers
 
-- (void)initWorld
-{
-    self.physicsWorld.gravity = CGVectorMake(0, -5.0);
-    self.physicsWorld.contactDelegate = self;
-    self.physicsBody = [SKPhysicsBody bodyWithEdgeLoopFromRect:CGRectMake(0, FLOOR_DISTANCE,
-                                                                          self.frame.size.width,
-                                                                          self.frame.size.height -FLOOR_DISTANCE)];
-    self.physicsBody.categoryBitMask = FCBoundaryCategory;
-    self.physicsBody.contactTestBitMask = FCPlayerCategory;
+- (void)initWorld {
+  self.physicsWorld.gravity = CGVectorMake(0, -5.0);
+  self.physicsWorld.contactDelegate = self;
+  self.physicsBody = [SKPhysicsBody bodyWithEdgeLoopFromRect:CGRectMake(0, FLOOR_DISTANCE, self.frame.size.width, self.frame.size.height -FLOOR_DISTANCE)];
+  self.physicsBody.categoryBitMask = FCBoundaryCategory;
+  self.physicsBody.contactTestBitMask = FCPlayerCategory;
     
-    _gameState = FCGameStateStarting;
-    _score = 0;
+  _gameState = FCGameStateStarting;
+  _score = 0;
 }
 
-- (void)initBird
-{
+- (void)initBird {
     _bird = [SKSpriteNode spriteNodeWithImageNamed:@"bird1"];
     _bird.position = CGPointMake(100, CGRectGetMidY(self.frame));
     _bird.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:_bird.size.width/2.5];
@@ -120,13 +103,11 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     [_bird runAction:[SKAction repeatActionForever:[SKAction animateWithTextures:textures timePerFrame:0.1]]];
 }
 
-- (void)initBackground
-{
+- (void)initBackground {
     _bgLayer = [SKNode node];
     [self addChild:_bgLayer];
     
-    for (int i = 0; i < 2; i++)
-    {
+    for (int i = 0; i < 2; i++) {
         SKSpriteNode * bg = [SKSpriteNode spriteNodeWithImageNamed:@"bg"];
         bg.anchorPoint = CGPointZero;
         bg.position = CGPointMake(i * bg.size.width, 0);
@@ -144,11 +125,9 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     [self addChild:_instructions];
 }
 
-- (void)initPipes
-{
+- (void)initPipes {
     SKSpriteNode *bottom = [self getPipeWithSize:CGSizeMake(62, ScalarRandomRange(40, 360)) isUp:NO];
-    bottom.position = [self convertPoint:CGPointMake(PIPE_XPOS, CGRectGetMinY(self.frame) + bottom.size.height/2 + FLOOR_DISTANCE)
-                                  toNode:_bgLayer];
+    bottom.position = [self convertPoint:CGPointMake(PIPE_XPOS, CGRectGetMinY(self.frame) + bottom.size.height/2 + FLOOR_DISTANCE) toNode:_bgLayer];
     bottom.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:bottom.size];
     bottom.physicsBody.categoryBitMask = FCPipeCategory;
     bottom.physicsBody.contactTestBitMask = FCPlayerCategory;
@@ -168,8 +147,7 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     float topSize = self.size.height - bottom.size.height - loop.size.height - FLOOR_DISTANCE;
     
     SKSpriteNode *top = [self getPipeWithSize:CGSizeMake(62, topSize) isUp:YES];
-    top.position = [self convertPoint:CGPointMake(PIPE_XPOS, CGRectGetMaxY(self.frame) - top.size.height/2)
-                               toNode:_bgLayer];
+    top.position = [self convertPoint:CGPointMake(PIPE_XPOS, CGRectGetMaxY(self.frame) - top.size.height/2) toNode:_bgLayer];
     top.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:top.size];
     top.physicsBody.categoryBitMask = FCPipeCategory;
     top.physicsBody.contactTestBitMask = FCPlayerCategory;
@@ -178,8 +156,7 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     [_bgLayer addChild:top];
 }
 
-- (void)initScoreMenu:(NSInteger)score
-{
+- (void)initScoreMenu:(NSInteger)score {
     SKSpriteNode *scoreTable = [SKSpriteNode spriteNodeWithImageNamed:@"score"];
     scoreTable.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame));
     [self addChild:scoreTable];
@@ -195,8 +172,7 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     ddf.position = CGPointMake(CGRectGetMidX(self.frame) +55, CGRectGetMidY(self.frame) -30);
     [self addChild:ddf];
     
-    if (score > [[[NSUserDefaults standardUserDefaults] objectForKey:@"best_score"] intValue])
-    {
+    if (score > [[[NSUserDefaults standardUserDefaults] objectForKey:@"best_score"] intValue]) {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         [defaults setObject:[NSString stringWithFormat:@"%li", (long)score] forKey:@"best_score"];
         [defaults synchronize];
@@ -205,24 +181,20 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
 
 #pragma mark - Background Update Position
 
-- (void)moveBg
-{
+- (void)moveBg {
     _bgLayer.position = CGPointMake(_bgLayer.position.x + (-BG_FPS * _dt), 0);
     
-    [_bgLayer enumerateChildNodesWithName:@"bg" usingBlock: ^(SKNode *node, BOOL *stop)
-     {
+    [_bgLayer enumerateChildNodesWithName:@"bg" usingBlock: ^(SKNode *node, BOOL *stop) {
          SKSpriteNode *bg = (SKSpriteNode *)node;
          CGPoint bgScreenPos = [_bgLayer convertPoint:bg.position toNode:self];
          
-         if (bgScreenPos.x <= -bg.size.width)
-         {
+         if (bgScreenPos.x <= -bg.size.width) {
              bg.position = CGPointMake(bg.position.x + bg.size.width *2, bg.position.y);
          }
      }];
 }
 
-- (SKSpriteNode *)getPipeWithSize:(CGSize)size isUp:(BOOL)side
-{
+- (SKSpriteNode *)getPipeWithSize:(CGSize)size isUp:(BOOL)side {
     CGRect textureSize = CGRectMake(0, 0, size.width, size.height);
     CGImageRef backgroundCGImage = [UIImage imageNamed:@"pipe"].CGImage;
     
@@ -239,15 +211,16 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     cap.position = CGPointMake(0, side ? -pipe.size.height/2 + cap.size.height/2 : pipe.size.height/2 - cap.size.height/2);
     [pipe addChild:cap];
     
-    if (side) cap.zRotation = 3.14159265;
+    if (side) {
+        cap.zRotation = 3.14159265;
+    }
     
     return pipe;
 }
 
 #pragma mark - Game Lyfe Cycle
 
-- (void)gameOver
-{
+- (void)gameOver {
     _gameState = FCGameStateEnded;
     _bird.physicsBody.categoryBitMask = kNilOptions;
     _bird.physicsBody.collisionBitMask = FCBoundaryCategory;
@@ -255,66 +228,51 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
     [self performSelector:@selector(restartGame) withObject:nil afterDelay:2];
 }
 
-- (void)restartGame
-{
-    [self.view presentScene:[[MyScene alloc] initWithSize:self.size]
-                 transition:[SKTransition doorsCloseVerticalWithDuration:0.5f]];
+- (void)restartGame {
+    [self.view presentScene:[[MyScene alloc] initWithSize:self.size] transition:[SKTransition doorsCloseVerticalWithDuration:0.5f]];
 }
 
 #pragma mark - Touch Events
 
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    switch (_gameState)
-    {
-        case FCGameStateStarting:
-        {
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    switch (_gameState) {
+        case FCGameStateStarting: {
             _gameState = FCGameStatePlaying;
             
             _instructions.hidden = YES;
             _bird.physicsBody.affectedByGravity = YES;
             [_bird.physicsBody applyImpulse:CGVectorMake(0, 25)];
             
-            [self runAction:[SKAction repeatActionForever:[SKAction sequence:@[
-                                                                               [SKAction waitForDuration:2],
-                                                                               [SKAction performSelector:@selector(initPipes)
-                                                                                                onTarget:self]
-                                                                               ]]]];
-        }
+            [self runAction:[SKAction repeatActionForever:[SKAction sequence:@[[SKAction waitForDuration:2], [SKAction performSelector:@selector(initPipes) onTarget:self] ]]]];
             break;
+        }
             
-        case FCGameStatePlaying:
-        {
+        case FCGameStatePlaying: {
             [_bird.physicsBody applyImpulse:CGVectorMake(0, 25)];
-        }
             break;
+        }
             
-        default:
+        case FCGameStateEnded:
             break;
     }
 }
 
 #pragma mark - SKPhysicsContact Delegate
 
-- (void)didBeginContact:(SKPhysicsContact *)contact
-{
+- (void)didBeginContact:(SKPhysicsContact *)contact {
     uint32_t collision = (contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask);
     
-    if (collision == (FCPlayerCategory | FCGapCategory))
-    {
+    if (collision == (FCPlayerCategory | FCGapCategory)) {
         _score++;
         _scoreLabel.text = [NSString stringWithFormat:@"%i", _score];
     }
     
-    if (collision == (FCPlayerCategory | FCPipeCategory))
-    {
+    if (collision == (FCPlayerCategory | FCPipeCategory)) {
         [self gameOver];
     }
     
-    if (collision == (FCPlayerCategory | FCBoundaryCategory))
-    {
-        if (_bird.position.y < 150)
-        {
+    if (collision == (FCPlayerCategory | FCBoundaryCategory)) {
+        if (_bird.position.y < 150) {
             [self gameOver];
         }
     }
@@ -322,19 +280,14 @@ typedef NS_OPTIONS(uint32_t, FCPhysicsCategory)
 
 #pragma mark - Frames Per Second
 
-- (void)update:(NSTimeInterval)currentTime
-{
-    if (_lastUpdateTime) _dt = currentTime - _lastUpdateTime;
-    else _dt = 0;
-    
+- (void)update:(NSTimeInterval)currentTime {
+    _dt = (_lastUpdateTime) ? currentTime - _lastUpdateTime : 0;
     _lastUpdateTime = currentTime;
     
-    if (_gameState != FCGameStateEnded)
-    {
+    if (_gameState != FCGameStateEnded) {
         [self moveBg];
         
-        if (_bird.physicsBody.velocity.dy > 280)
-        {
+        if (_bird.physicsBody.velocity.dy > 280) {
             _bird.physicsBody.velocity = CGVectorMake(_bird.physicsBody.velocity.dx, 280);
         }
         
